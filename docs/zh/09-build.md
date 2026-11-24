@@ -33,6 +33,8 @@ pnpm build      # 产物在 dist/
 | `pnpm type`   | TypeScript 类型检查    |
 | `pnpm lint`   | oxlint 检查            |
 | `pnpm format` | oxfmt 格式化           |
+| `pnpm tauri dev`   | 启动桌面壳开发模式（先跑 `pnpm dev`）     |
+| `pnpm tauri build` | 打包桌面安装包到 `src-tauri/target/release/bundle/` |
 
 API 地址在 [`rspack.config.ts`](../../rspack.config.ts) 的 `createConfig({ apiOrigin })` 里配置，默认 `https://api.deepseek.com`。
 
@@ -65,6 +67,36 @@ Unkernel 默认在主线程运行，不需要跨源隔离；多 CPU 需要跨源
   ```
 - APK 使用 `xiaohuangbo.jks`、别名 `xiaohuangbo` 签名，versionCode 281；
 - **Python 后端不会在 APK 内执行**：`android/assets/backend` 只打包 `mcp-server` 与 EasyJailbreak 源码供参考；实验台仍需在电脑或服务器上运行后端，并在「实验台」里把地址改为 `http://<电脑IP>:8765/mcp`。手机页面的 Origin 是 `http://127.0.0.1:18765`，已在后端允许来源内。
+
+### 9.2 桌面客户端（Tauri）
+
+`src-tauri/` 是一个 Tauri 2 桌面壳：只开一个窗口加载同一份 `dist/`，不新增聊天功能，也不向前端暴露 Tauri 接口。
+
+```sh
+pnpm tauri dev     # 开发：先启动 pnpm dev，再打开桌面窗口，前端改动即时生效
+pnpm tauri build   # 打包：先执行 pnpm build，安装包输出到 src-tauri/target/release/bundle/
+```
+
+- 应用版本跟随 `package.json`（`tauri.conf.json` 的 `version` 指向它），不需要单独维护；
+- 页面来源是 `tauri://localhost`（Linux / macOS）或 `http://tauri.localhost`（Windows），`tauri dev` 时是开发服务器。API Key 与对话记录存在 webview 自己的 localStorage / IndexedDB 里，和浏览器里在线版的数据互不相通，首次使用要重新填写 API Key；
+- 壳只处理四件事：
+  - **外链**：站外地址一律交给系统浏览器，应用窗口里只加载应用自己的地址（含它的 `blob:` / `data:` 预览页；图片 / PDF 附件的预览开子窗口）；
+  - **下载**：Linux 与 Windows 用 webview 自带的下载流程，直接存进「下载」目录；WKWebView 默认会丢弃下载，macOS 上由壳接住，落点相同；
+  - **权限**：麦克风、剪贴板读取、通知、定位直接允许、不弹询问，其余权限沿用各平台默认行为；
+  - **重复启动**：不再开第二个窗口，而是把已开着的窗口提到前台——前端的数据全在同一份 webview 存储里，两个进程同时写会互相覆盖；
+- `app.security.headers` 配了和 `coi-sw.js` 相同的 COOP / COEP，所以桌面端不需要注册 Service Worker。这组头只在 WebView2（Windows）上生效，WebKit 不会为 `tauri://` 建立跨源隔离；
+- 图标由 `src-tauri/app-icon.png` 生成：`pnpm tauri icon src-tauri/app-icon.png -o src-tauri/icons`；
+- Linux 的包名和桌面入口文件名取自产品名，而窗口的 app_id / WM class 取自可执行文件名 `deepseek-unrestricted`，两者一致任务栏才能把窗口关联到启动器。所以 `tauri.linux.conf.json` 只在 Linux 上把产品名改成 `deepseek-unrestricted`，显示名由 `src-tauri/linux/desktop.hbs` 恢复成 `DeepSeek Unrestricted`；Windows / macOS 仍用 `DeepSeek Unrestricted`。
+
+Linux 构建需要 `libwebkit2gtk-4.1-dev` 和 `patchelf`：
+
+```sh
+sudo apt install libwebkit2gtk-4.1-dev patchelf
+```
+
+Linux 有三种安装包：deb 和 rpm 约 104 MiB，依赖系统自带的 WebKitGTK；AppImage 约 208 MiB，把构建机上的 WebKitGTK 运行库一并打了进去，可以在没装或版本不匹配的机器上直接运行。
+
+Windows、macOS 的前置条件（WebView2 Runtime、Xcode Command Line Tools 等）见 [Tauri 官方文档](https://v2.tauri.app/start/prerequisites/)。
 
 ---
 

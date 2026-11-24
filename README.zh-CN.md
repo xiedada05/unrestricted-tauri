@@ -38,7 +38,8 @@
 - **聊天模式**：仅聊天 / 网页 Agent / PTC / 创造，决定下发哪些客户端工具与往返上限；
 - **关键词拒答**：设置 → 模型里配置关键词、大小写与自定义话术，命中用户输入时本地直接拒答，不请求接口，未填 API Key 也能触发；
 - **统计与计费**：用量账本、上下文分类、按模型计费、服务端搜索免费开关；
-- **安卓端**：APK 构建、应用内更新检测、NanoVM 联网内置代理；WebVM 因 Android WebView 不支持跨源隔离而只能在浏览器里运行，Unkernel 在 WebView 支持 JSPI 时可直接使用。
+- **安卓端**：APK 构建、应用内更新检测、NanoVM 联网内置代理；WebVM 因 Android WebView 不支持跨源隔离而只能在浏览器里运行，Unkernel 在 WebView 支持 JSPI 时可直接使用；
+- **桌面端**：Tauri 2 壳（`pnpm tauri build`），开一个窗口加载同一份构建产物，不新增功能。
 
 ## 文档导航
 
@@ -54,8 +55,8 @@ README 已经拆成 `docs/zh/` 下的分册，首页只保留简介与入口；�
 | 6. 请求体实际内容     | 实际发出去的 JSON 长什么样                              | [06-request.md](docs/zh/06-request.md)                 |
 | 7. 实现位置索引       | 每个能力对应的源码文件                                  | [07-implementation.md](docs/zh/07-implementation.md)   |
 | 8. 数据、隐私与网络   | 数据都存在哪、请求发往哪里                              | [08-privacy.md](docs/zh/08-privacy.md)                 |
-| 9. 运行与构建         | 开发、构建与 Android APK 打包                           | [09-build.md](docs/zh/09-build.md)                     |
-| 10. 已知限制          | 82 条边界与取舍                                         | [10-known-limits.md](docs/zh/10-known-limits.md)       |
+| 9. 运行与构建         | 开发、构建、Android APK 与 Tauri 桌面打包               | [09-build.md](docs/zh/09-build.md)                     |
+| 10. 已知限制          | 86 条边界与取舍                                         | [10-known-limits.md](docs/zh/10-known-limits.md)       |
 | 11. 许可与致谢        | MIT 许可与上游                                          | [11-license.md](docs/zh/11-license.md)                 |
 
 ## 快速开始
@@ -64,6 +65,8 @@ README 已经拆成 `docs/zh/` 下的分册，首页只保留简介与入口；�
 pnpm install
 pnpm dev                       # 本地开发（http://localhost:8090）
 pnpm build                     # 构建静态产物到 dist/
+pnpm tauri dev                 # 桌面壳开发模式（窗口 + 热更新）
+pnpm tauri build               # 打包桌面安装包，见 9.2
 KS_PASS=<keystore密码> ./构建APK.sh   # 构建并签名 Android APK
 ```
 

@@ -98,6 +98,14 @@
 
 82. **Unkernel 需要 JSPI，Alpine / Debian 双镜像**：内核依赖 `WebAssembly.Suspending` / `promising`（Chrome / Edge 137+、Firefox 153+、Safari 27+）；旧 Android WebView 会显示启动错误，请用新版浏览器打开在线版。同时打包 Alpine（3.9 MiB）和 Debian（70 MiB），加上 DSH go 的 24 MiB 二进制，APK 约 112 MB；Debian 首次启动会流式读取 70 MiB 镜像。多 CPU 需要跨源隔离：桌面静态站点会提示开启并刷新一次，Android WebView 不支持，只能 1 个 CPU。联网默认走公共 Wisp 代理（anura.pro / mercurywork.shop，代理运营方能看到 guest 连接的主机名、端口和明文 HTTP 内容；TLS 仍是端到端）。如果公共代理不可用，在 设置 → Unkernel Linux 里填自己的 `wss://` 地址。DSH go 演示是 24 MiB 的静态 aarch64 二进制，Alpine 和 Debian 都能跑，不再需要 2 GiB 内存或 600 MB 运行时；首次运行在终端里输入 API Key（不回显），保存在 `~/.dsh-go/api-key`。数据盘可在 设置 → Unkernel Linux 里扩容或一键重置，重置会清空 `/data` 和保存的虚拟机快照。NanoVM / WebVM 的 `fastfetch` 是内置命令。全屏页面 UI 已汉化（终端里 Linux 内核自己的输出仍是英文）；应用内的设置栏和 Agent 工具也是中文。
 
+83. **桌面端只是一个壳**：`src-tauri/` 用 Tauri 2 开一个窗口加载同一份 `dist/`，不新增功能，也不向前端暴露 Tauri 接口；没有托盘图标、应用菜单、自动更新和原生代理（NanoVM 联网只能直连或填自定义代理）。数据存在 webview 自己的 localStorage / IndexedDB 里（Linux 在 `~/.local/share/com.xiaohuangbo.deepseekunrestricted/`），和浏览器里在线版的数据互不相通，需要重新填写 API Key。
+
+84. **桌面端不弹权限询问**：浏览器里麦克风、通知、定位第一次使用时会询问；桌面壳把麦克风、剪贴板读取、通知、定位直接放行，其余权限沿用各平台默认行为。这些能力只在对应功能用到时才申请：语音输入、终端粘贴，以及默认关闭的通知 / 定位 Agent 工具。
+
+85. **Linux / macOS 桌面端拿不到跨源隔离**：`tauri://localhost` 不是标准协议，WebKit 不会为它建立跨源隔离，`tauri.conf.json` 里配的 COOP / COEP 不起作用（Windows 的 WebView2 把 `http://tauri.localhost` 当普通来源，配置生效）。依赖跨源隔离的 WebVM（CheerpX）和多 CPU 的 Unkernel 因此无法启用；Linux 的实测环境是 Debian 13 / WebKitGTK 2.52.6，macOS 同为 WebKit 内核，未单独验证。
+
+86. **Linux 桌面端的能力取决于发行版的 WebKitGTK 构建**（Debian 13 的 2.52.6 实测）：没有 `SharedArrayBuffer`，WebVM 无法运行；没有 JSPI，Unkernel 依赖的 `WebAssembly.Suspending` / `promising` 不存在，无法启动；没有 WebGPU，浏览器内本地模型不可用，改用 MLC-LLM API；没有 `navigator.storage`，工作区的 OPFS 标签置灰，只能用 localStorage 模式（单文件 4 MB、总量 5 MB、200 个文件）。换用启用了这些特性的 WebKitGTK 构建，结果会不同。
+
 ---
 
 [← 返回 README](../../README.md) · [全部文档](README.md)

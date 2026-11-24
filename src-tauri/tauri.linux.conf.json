@@ -1,0 +1,14 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "deepseek-unrestricted",
+  "bundle": {
+    "linux": {
+      "deb": {
+        "desktopTemplate": "linux/desktop.hbs"
+      },
+      "rpm": {
+        "desktopTemplate": "linux/desktop.hbs"
+      }
+    }
+  }
+}
