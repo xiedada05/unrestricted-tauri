@@ -1,0 +1,26 @@
+[package]
+name = "deepseek-unrestricted"
+# 应用版本以 ../package.json 为准（tauri.conf.json 的 version 指向它），这里只是 Cargo 包的版本
+version = "2.7.11"
+description = "DeepSeek Unrestricted 的桌面壳"
+edition = "2021"
+rust-version = "1.90"
+
+[build-dependencies]
+tauri-build = { version = "2.7.6", features = [] }
+
+[dependencies]
+tauri = { version = "2.12.7", features = [] }
+tauri-plugin-single-instance = { version = "2.5.5" }
+# 交给系统打开器用。不用 tauri-plugin-opener：它会向页面注入一个全局 click
+# 脚本拦截 target="_blank" 的链接走 IPC，前端没有授权时点击就整个失效；
+# 直接用它依赖的 open 库，页面侧不注入任何脚本、也不暴露 IPC 接口
+open = { version = "5.4.5", features = ["shellexecute-on-windows"] }
+
+[profile.release]
+# 与 Tauri 官方模板一致：减小发布包体积
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

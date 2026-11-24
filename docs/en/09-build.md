@@ -66,6 +66,36 @@ A native WebView shell is included; the built artifact is `android/deepseek-unre
 - The APK is signed with `xiaohuangbo.jks`, alias `xiaohuangbo`, versionCode 281;
 - **The Python backend is not executed inside the APK**: `android/assets/backend` bundles the `mcp-server` and EasyJailbreak sources for reference only; the lab still needs a backend on a PC or server, with its endpoint set to `http://<PC-IP>:8765/mcp`. The phone page origin is `http://127.0.0.1:18765`, which the backend already allows.
 
+### 9.2 Desktop client (Tauri)
+
+`src-tauri/` is a Tauri 2 desktop shell: it opens one window that loads the same `dist/`, adds no chat features and exposes no Tauri API to the frontend.
+
+```sh
+pnpm tauri dev     # development: starts pnpm dev, then opens the desktop window with live reload
+pnpm tauri build   # packaging: runs pnpm build first; installers land in src-tauri/target/release/bundle/
+```
+
+- The app version follows `package.json` (`version` in `tauri.conf.json` points to it), so there is nothing to maintain separately;
+- The page origin is `tauri://localhost` (Linux / macOS) or `http://tauri.localhost` (Windows), and the dev server under `tauri dev`. The API key and conversations live in the webview's own localStorage / IndexedDB, separate from the online version's data in a browser, so the API key has to be entered again on first use;
+- The shell only handles four things:
+  - **External links**: any off-app address goes to the system browser; the app window only loads the app's own addresses (including its `blob:` / `data:` previews, which open in a child window for image / PDF attachments);
+  - **Downloads**: Linux and Windows use the webview's built-in flow and save straight into the Downloads folder; WKWebView drops downloads by default, so on macOS the shell catches them and saves to the same place;
+  - **Permissions**: microphone, clipboard read, notifications and geolocation are granted without a prompt; everything else keeps the platform default;
+  - **Relaunch**: a second launch opens no second window and just brings the running one to the front — all frontend data lives in one webview store, and two processes writing to it would overwrite each other;
+- `app.security.headers` sets the same COOP / COEP values as `coi-sw.js`, so the desktop client never registers the service worker. Those headers only take effect on WebView2 (Windows); WebKit does not make `tauri://` cross-origin isolated;
+- Icons are generated from `src-tauri/app-icon.png`: `pnpm tauri icon src-tauri/app-icon.png -o src-tauri/icons`;
+- On Linux the package name and the desktop entry file name come from the product name, while the window's app_id / WM class comes from the executable name `deepseek-unrestricted`; the taskbar can only link a window to its launcher when the two agree. So `tauri.linux.conf.json` changes the product name to `deepseek-unrestricted` on Linux only, and `src-tauri/linux/desktop.hbs` restores the display name `DeepSeek Unrestricted`; Windows / macOS keep `DeepSeek Unrestricted`.
+
+Building on Linux needs `libwebkit2gtk-4.1-dev` and `patchelf`:
+
+```sh
+sudo apt install libwebkit2gtk-4.1-dev patchelf
+```
+
+There are three Linux packages: deb and rpm are about 104 MiB each and rely on the system's WebKitGTK; the AppImage is about 208 MiB because it bundles the build machine's WebKitGTK libraries, so it runs on machines where WebKitGTK is missing or has a different version.
+
+For the Windows and macOS prerequisites (WebView2 Runtime, Xcode Command Line Tools and so on), see the [Tauri documentation](https://v2.tauri.app/start/prerequisites/).
+
 ---
 
 ---

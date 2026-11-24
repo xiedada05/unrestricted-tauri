@@ -40,7 +40,8 @@
 - **Characters and account**: role cards (persona, avatar, auto memory), My profile, a compression threshold and DeepSeek balance plus usage overview, ported from Remember and wired into the existing memory and stats systems;
 - **Keyword refusal**: configure keywords, case sensitivity and a custom message under Settings → Model; a match refuses locally without calling the API, even without a key;
 - **Statistics and billing**: usage ledger, context breakdown, per-model pricing and the free server-search switch;
-- **Android**: APK builds, in-app update check and a built-in network proxy for NanoVM; WebVM stays browser-only because Android WebView has no cross-origin isolation, while Unkernel runs in the bundled page when the WebView supports JSPI.
+- **Android**: APK builds, in-app update check and a built-in network proxy for NanoVM; WebVM stays browser-only because Android WebView has no cross-origin isolation, while Unkernel runs in the bundled page when the WebView supports JSPI;
+- **Desktop**: a Tauri 2 shell (`pnpm tauri build`) that loads the same build in one window and adds no features.
 
 ## Documentation
 
@@ -56,8 +57,8 @@ The README is now split into chapters under `docs/en/`; this page keeps the intr
 | 6. What the request contains    | The JSON that actually goes out                                      | [06-request.md](docs/en/06-request.md)                 |
 | 7. Implementation index         | Which source file implements what                                    | [07-implementation.md](docs/en/07-implementation.md)   |
 | 8. Data, privacy and network    | Where data lives and where requests go                               | [08-privacy.md](docs/en/08-privacy.md)                 |
-| 9. Run and build                | Development, production build and the Android APK                    | [09-build.md](docs/en/09-build.md)                     |
-| 10. Known limitations           | The 82 boundaries and trade-offs                                     | [10-known-limits.md](docs/en/10-known-limits.md)       |
+| 9. Run and build                | Development, production build, the Android APK and the Tauri desktop packages | [09-build.md](docs/en/09-build.md)                     |
+| 10. Known limitations           | The 86 boundaries and trade-offs                                     | [10-known-limits.md](docs/en/10-known-limits.md)       |
 | 11. License and credits         | MIT and upstream                                                     | [11-license.md](docs/en/11-license.md)                 |
 
 ## Quick start
@@ -66,6 +67,8 @@ The README is now split into chapters under `docs/en/`; this page keeps the intr
 pnpm install
 pnpm dev                       # dev server (http://localhost:8090)
 pnpm build                     # static build into dist/
+pnpm tauri dev                 # desktop shell in development (window + live reload)
+pnpm tauri build               # package the desktop installers, see 9.2
 KS_PASS=<keystore-password> ./构建APK.sh   # build and sign the Android APK
 ```
 
